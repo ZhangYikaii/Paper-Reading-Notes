@@ -17,6 +17,8 @@
 
 ---
 
+
+
 + **背景? 提出了什么问题?**
 + **为了解决此问题提出了什么具体的idea?**
 + **如何从该idea形式化地对问题建模、简化并解决的?**
@@ -24,6 +26,55 @@
 + **这个任务/解决方法有什么意义?**
 + **对论文的讨论/感想?**
 ```
+
+
+
+## D1
+
+出发点: 降低模型对样本的需要, 常规思路:
+
++ 引入正则化项, 降低模型的复杂度.
++ 考虑用其他方法简化模型.
++ 考虑数据的先验, 利用其他任务或者数据集本身的一些特性.
+
+Meta-Learning, 在学习过程是学得一个好的embedding的思路, 从data学得一个 $\phi$, 数据点被映射到另一个特征空间.
+
+1. Siamese Neural Network:
+
+   训练方式为 生成pairs: $(x_i, x_j, y_{ij})$, 两幅图片 像/不像, 训练过程优化 $\| \phi(x_i) - \phi (x_j) \| _F^2$, 转化成距离的远近.
+
+   缺点: 无法反映相似程度, 有些图片之间更相似/更不相似无法度量.
+
+2. 由上缺点, 引入 triplet loss, $(x_i, x_j, x_k)$ 其中$x_i$和$x_j$之间相似, $x_i$和$x_k$之间不相似, $\min_{\phi} \mathcal{D_{ik}} - \mathcal{D}_{ij}$.
+
+Multi-Task learning 视角:
+
+两个数据集:
+
++ $(x_i^{(1)}, y_i^{(1)}) \sim \mathcal{D}_1$, $N_1$
++ $(x_i^{(2)}, y_i^{(2)}) \sim \mathcal{D}_2$, $N_2$
+
+有点像第一个数据集是动物实拍图像, 第二个是动物标本图像, 两个数据集有相似的地方, 也有不相似的地方, 设计模型(两种极端情况):
+
+1. 混合 $\mathcal{D}_1, \mathcal{D}_2$, 相当于参数全部共享.
+2. 单独训练, 相当于参数全部分开.
+
+设计模型的时候要考虑共享的训练参数, 也要考虑到不同的部分:
+$$
+\min_w \sum_{i = 1}^{N_i} \mathcal{L}_t \left(\Delta w_t (w^T x_i^{(t)}) \right)
+$$
+如上式, $w_t$就是不同数据集(任务)上不同的参数, $w$就是共有的部分.
+
+具体的训练过程, 针对$\mathcal{T}$个Task就是:
+$$
+\min_\phi \frac{1}{T} \sum_{t = 1}^T \min_{w_t} \frac{1}{N_t} \mathcal{L} \left( w_t^T \phi(x_i^T)  \right)
+$$
+注意上式 $\phi$ 就相当于共享的参数, $w_t$ 就相当于独立的参数, 上式的训练过程就像Meta-Learning的训练过程(两层优化): 现在内层优化 $w_t$, 然后出来优化 $\phi$, 如此迭代循环.
+
+**转化到Meta-Learning**, 就是要适应新的类, 就是之前没有见过的类也要会分类, 则为"省略共享的参数":
+$$
+\min_\phi \frac{1}{T} \sum_{t = 1}^T \frac{1}{N_Q^t} \sum_i^{N_Q^t} \mathcal{L} \left(\phi(x_i^{query}); \phi(x_i^{Support}))  \right)
+$$
 
 
 
@@ -136,6 +187,90 @@
 
   例子: `227 x 227 x 3` 的输入图像和卷积核 `11 x 11 x 3` 做卷积, 步长为4, 卷积后的尺寸是 `55 x 55 x 1`. 因为: (227 - 11 + 2 * 0) / 4 + 1 = 55.
   一共有96个卷积核, 最后的输出: 55 x 55 x 48 x 2. (图上之所以看起来是48个是由于2个GPU服务器处理, 每个服务器承担了48个): ![image-20201002161926014](assets/image-20201002161926014.png)
+
+
+
+**GoogLeNet**, a.k.a **Inception v.1** (2014) [[paper](https://arxiv.org/abs/1409.4842)]
+
+- Szegedy et al. "Going Deeper with Convolutions" [Google]
+- Original [LeNet page](http://yann.lecun.com/exdb/lenet/) from Yann LeCun's homepage.
+-  **Inception v.2 and v.3** (2015) Szegedy et al. "Rethinking the Inception Architecture for Computer Vision" [[paper](https://arxiv.org/abs/1512.00567)]
+-  **Inception v.4 and InceptionResNet** (2016) Szegedy et al. "Inception-v4, Inception-ResNet and the Impact of Residual Connections on Learning" [[paper](https://arxiv.org/abs/1602.07261)]
+- "A Simple Guide to the Versions of the Inception Network" [[blogpost](https://towardsdatascience.com/a-simple-guide-to-the-versions-of-the-inception-network-7fc52b863202)]
+
+
+
+### VGG
+
+- [x] **VGG** (2014) [[paperswithcode](https://paperswithcode.com/method/vgg)]
+    + **Simonyan et al. "Very Deep Convolutional Networks for Large-Scale Image Recognition" (2014) [Google DeepMind & Oxford's Visual Geometry Group (VGG)] [[paper](https://arxiv.org/abs/1409.1556)]**
+    + *VGG-16*: Zhang et al. "Accelerating Very Deep Convolutional Networks for Classification and Detection" [[paper](https://arxiv.org/abs/1505.06798?context=cs)]
+
+
+| 核心在哪? | 精读? 代码? | 关键词? | 亮点? | 笔记时间? |
+| --------- | ----------- | ------- | ----- | --------- |
+|           |             |         |       |           |
+
+---
+
+![img](assets/vgg_7mT4DML.png)
+
++ **背景? 提出了什么问题?**
++ **为了解决此问题提出了什么具体的idea?**
++ **如何从该idea形式化地对问题建模、简化并解决的?**
++ **理论方面证明的定理与推导过程?**
++ **这个任务/解决方法有什么意义?**
++ **对论文的讨论/感想?**
+
+
+
+### GoogLeNet
+
+- [x] **MainTitle** (CVPR 2015) [[paperswithcode](https://paperswithcode.com/method/googlenet)]
+    - **Szegedy et al. "Going Deeper with Convolutions" [Google]**
+    - Original [LeNet page](http://yann.lecun.com/exdb/lenet/) from Yann LeCun's homepage.
+    - **Inception v.2 and v.3** (2015) Szegedy et al. "Rethinking the Inception Architecture for Computer Vision" [[paper](https://arxiv.org/abs/1512.00567)]
+    - **Inception v.4 and InceptionResNet** (2016) Szegedy et al. "Inception-v4, Inception-ResNet and the Impact of Residual Connections on Learning" [[paper](https://arxiv.org/abs/1602.07261)]
+    - "A Simple Guide to the Versions of the Inception Network" [[blogpost](https://towardsdatascience.com/a-simple-guide-to-the-versions-of-the-inception-network-7fc52b863202)]
+
+
+| 核心在哪? | 精读? 代码? | 关键词? | 亮点? | 笔记时间? |
+| --------- | ----------- | ------- | ----- | --------- |
+|           |             |         |       |           |
+
+---
+
+
+
++ **背景? 提出了什么问题?**
++ **为了解决此问题提出了什么具体的idea?**
++ **如何从该idea形式化地对问题建模、简化并解决的?**
++ **理论方面证明的定理与推导过程?**
++ **这个任务/解决方法有什么意义?**
++ **对论文的讨论/感想?**
+
+
+
+### ResNet
+
+- [x] **ResNet** (CVPR 2016) [[paperswithcode](https://paperswithcode.com/paper/deep-residual-learning-for-image-recognition) ([ResNet Explained](https://paperswithcode.com/method/resnet))]
+    - He et al. "Deep Residual Learning for Image Recognition"
+
+
+| 核心在哪? | 精读? 代码? | 关键词? | 亮点? | 笔记时间? |
+| --------- | ----------- | ------- | ----- | --------- |
+|           | 精读, 代码  |         |       |           |
+
+---
+
+
+
++ **背景? 提出了什么问题?**
++ **为了解决此问题提出了什么具体的idea?**
++ **如何从该idea形式化地对问题建模、简化并解决的?**
++ **理论方面证明的定理与推导过程?**
++ **这个任务/解决方法有什么意义?**
++ **对论文的讨论/感想?**
 
 
 
@@ -470,13 +605,13 @@ Training Set 是 Support Set, Test Set 是 Query Set.
     $$
     r_{i, j}=g_{\phi}\left(\mathcal{C}\left(f_{\varphi}\left(x_{i}\right), f_{\varphi}\left(x_{j}\right)\right)\right), \quad i=1,2, \ldots, C
     $$
-    
+  
 + 损失函数:
   
   目标优化函数是MSE损失, 而不是cross-entropy, 因为RN在预测时更倾向于把相似系数预测过程**作为一个regression问题**, 而不是二分类问题.
-    $$
+  $$
     \varphi, \phi \leftarrow \underset{\varphi, \phi}{\operatorname{argmin}} \sum_{i=1}^{m} \sum_{j=1}^{n}\left(r_{i, j}-1\left(y_{i}==y_{j}\right)\right)^{2}
-    $$
+  $$
 
 + **理论方面证明的定理与推导过程?**
 + **这个任务/解决方法有什么意义?**
@@ -749,76 +884,129 @@ $\mathcal{D}_{\text {large}}$ 上学到的, 泛化到 $\mathcal{C}_{\text {few}}
 
 
 
-### TADAM
+### TADAM (难)
 
 - [x] **TADAM** (NIPS 2018) [[paperswithcode](https://paperswithcode.com/paper/tadam-task-dependent-adaptive-metric-for)]
     - Boris N. Oreshkin et al. "TADAM: Task dependent adaptive metric for improved few-shot learning"
 
 
-| 核心在哪? | 精读? 代码? | 关键词? | 亮点? | 笔记时间? |
-| --------- | ----------- | ------- | ----- | --------- |
-|           |             |         |       |           |
+| 核心在哪? | 精读? 代码? | 关键词? | 亮点?                                             | 笔记时间? |
+| --------- | ----------- | ------- | ------------------------------------------------- | --------- |
+|           | 精读        |         | 1. scale metric, 2. TEN结构, 3. 辅助任务合作训练. |           |
 
 ---
 
 ![image-20201003214505961](assets/image-20201003214505961.png)
 
+![image-20201004104024080](assets/image-20201004104024080.png) ![image-20201004104042148](assets/image-20201004104042148.png)
+
 + **背景? 提出了什么问题?**
+
+  学到一个context的度量空间, 即学习一个合适的相似性度量, 提取输入数据的特征后, 将其映射到similarity space.
+
+  similarity metric 和 cost function 之间的 non-trivial interaction 可以通过 scaling 来提高性能.
+
+
+
 + **为了解决此问题提出了什么具体的idea?**
+
+  metric scaling and metric task conditioning
+
+  + M-shot, K-way.
+
+  + **feature extractor**:
+    $$
+    f_{\phi}: \mathbb{R}^{D_{\mathbf{x}}} \rightarrow \mathbb{R}^{D_{\mathbf{z}}}
+    $$
+    这里 $f_{\phi} (x)$ 可以被直接用来解决问题 (比如matching, prototype就是这么做的).
+
+  + **similarity measure** $d: \mathbb{R}^{D_{\mathbf{z}} \times D_{\mathbf{z}}} \rightarrow \mathbb{R}$
+
+    $d$ 并不满足度量的基本性质 (non-negativity, symmetry, subadditivity).
+
+    
+
+  ![image-20201004092043138](assets/image-20201004092043138.png)
+
+  + 采用 metric scaling, 并数学上分析.
+  + task encoding network.
+  + co-training the feature extraction on a conventional supervised classification task.
+
+  
+
 + **如何从该idea形式化地对问题建模、简化并解决的?**
+
+  + **model**:
+
+    **1 scale** the distance metric, **乘一个 $\alpha$,** $\alpha \ d(\cdot, \cdot)$.
+
+    在计算完距离度量后学习一个scaling factor.
+    
+    此时该metric的学习过程, the class-wise cross-entropy loss function:
+    $$
+    J_{k}(\phi, \alpha)=\sum_{\mathbf{x}_{i} \in \mathcal{Q}_{k}}\left[\alpha d\left(f_{\phi}\left(\mathbf{x}_{i}\right), \mathbf{c}_{k}\right)+\log \sum_{j} \exp \left(-\alpha d\left(f_{\phi}\left(\mathbf{x}_{i}\right), \mathbf{c}_{j}\right)\right)\right]
+$$
+    其中 $\mathcal{Q}_k$ 是query set, 第 $k$ 类.
+    
+    对 $\phi$ 求导, (就是内函数外函数导数)有 注意 $\alpha$ 提到外面了:
+    $$
+    \frac{\partial}{\partial \phi} J_{k}(\phi, \alpha)=\alpha \sum_{\mathbf{x}_{i} \in \mathcal{Q}_{k}}\left[\frac{\partial}{\partial \phi} d\left(f_{\phi}\left(\mathbf{x}_{i}\right), \mathbf{c}_{k}\right)-\frac{\sum_{j} \exp \left(-\alpha d\left(f_{\phi}\left(\mathbf{x}_{i}\right), \mathbf{c}_{j}\right)\right) \frac{\partial}{\partial \phi} d\left(f_{\phi}\left(\mathbf{x}_{i}\right), \mathbf{c}_{j}\right)}{\sum_{j} \exp \left(-\alpha d\left(f_{\phi}\left(\mathbf{x}_{i}\right), \mathbf{c}_{j}\right)\right)}\right]
+$$
+    
+
+    上式:
+
+    直观上, $\alpha$ 有两个影响:
+    
+1. 梯度的全局放缩.
+    2. 增加 RHS 括号内第二项权重.
+
+    ![image-20201004095830004](assets/image-20201004095830004.png)
+
+    + $\alpha \rightarrow 0$ 时, 注意(3)式 RHS两项的正负号:
+
+      + 第一项 $\frac{K-1}{K} \frac{\partial}{\partial \phi} d\left(f_{\phi}\left(\mathbf{x}_{i}\right), \mathbf{c}_{k}\right)$:
+    
+        最小化 和第 $k$ 类 prototype 的距离.
+        
+      + 第二项负号, 所以是最大化和其他类的prototype.
+      
+    + $\alpha \rightarrow \infty$ 时, 注意RHS:
+    
+      + 第一项一样.
+      + 第二项是最大化 那个最接近的错误类的prototype.
+    
+    
+    
+    **2 Task conditioning**
+    
+    特征提取 $f_{\phi}$ 应是task-independent. 通过任务的样例集来提取任务表示.
+    $$
+    f_{\phi}(\mathbf{x}, \Gamma)
+    $$
+    其中task representation的参数表达. is related to **the FILM conditioning layer** [19] and **conditional batch normalization** [3,18] of the form $h_{\ell+1}=\gamma \odot h_{\ell}+\beta$, where $\gamma$ and $\beta$ are **scaling and shift** vectors applied to the layer $h_{\ell}$.
+    
+    使用the mean of the class prototypes作为任务上的prototype.
+    
+    + **task embedding network (TEN):**
+    
+      predict layer-level element-wise scale and shift vectors $\gamma$, $\beta$ for each convolutional layer in the feature extractor.
+    
+    ![image-20201004104050980](assets/image-20201004104050980.png) 仔细看才看得懂.
+
+
+
+**1)** 通过Auxiliary task co-training的训练方式训练feature extractor, 为support set和query set中的样例抽取特征得到class representation. 其中feature extractor中采用的是ResNet-12结构.
+
+**2)** 借鉴Prototypical Network的思想, 将每类的样例得到的向量表示求平均得到每一类的原型, 随后使用类原型的平均值作为task representation, 将这个任务表示作为输入, 到TEN network中, 然后根据它的数据更新feature extractor提取的特征, 将任务特有的特征与样例提取的特征相结合, 使得support set和query set的class representation更具有泛化性.
+
+**3)** 根据上一步的class representation计算similarity metric, 随后乘一个可学习的系数 $\alpha$ 来缩放距离度量, 增强模型的可适性. 最后将这步输出投入到softmax中得到图片的最终分类.
+
+
+
 + **理论方面证明的定理与推导过程?**
+  + *Lemma 1*, Appendix A.
 + **这个任务/解决方法有什么意义?**
 + **对论文的讨论/感想?**
-
-
-
-
-
-## D1
-
-出发点: 降低模型对样本的需要, 常规思路:
-
-+ 引入正则化项, 降低模型的复杂度.
-+ 考虑用其他方法简化模型.
-+ 考虑数据的先验, 利用其他任务或者数据集本身的一些特性.
-
-Meta-Learning, 在学习过程是学得一个好的embedding的思路, 从data学得一个 $\phi$, 数据点被映射到另一个特征空间.
-
-1. Siamese Neural Network:
-
-   训练方式为 生成pairs: $(x_i, x_j, y_{ij})$, 两幅图片 像/不像, 训练过程优化 $\| \phi(x_i) - \phi (x_j) \| _F^2$, 转化成距离的远近.
-
-   缺点: 无法反映相似程度, 有些图片之间更相似/更不相似无法度量.
-
-2. 由上缺点, 引入 triplet loss, $(x_i, x_j, x_k)$ 其中$x_i$和$x_j$之间相似, $x_i$和$x_k$之间不相似, $\min_{\phi} \mathcal{D_{ik}} - \mathcal{D}_{ij}$.
-
-Multi-Task learning 视角:
-
-两个数据集:
-
-+ $(x_i^{(1)}, y_i^{(1)}) \sim \mathcal{D}_1$, $N_1$
-+ $(x_i^{(2)}, y_i^{(2)}) \sim \mathcal{D}_2$, $N_2$
-
-有点像第一个数据集是动物实拍图像, 第二个是动物标本图像, 两个数据集有相似的地方, 也有不相似的地方, 设计模型(两种极端情况):
-
-1. 混合 $\mathcal{D}_1, \mathcal{D}_2$, 相当于参数全部共享.
-2. 单独训练, 相当于参数全部分开.
-
-设计模型的时候要考虑共享的训练参数, 也要考虑到不同的部分:
-$$
-\min_w \sum_{i = 1}^{N_i} \mathcal{L}_t \left(\Delta w_t (w^T x_i^{(t)}) \right)
-$$
-如上式, $w_t$就是不同数据集(任务)上不同的参数, $w$就是共有的部分.
-
-具体的训练过程, 针对$\mathcal{T}$个Task就是:
-$$
-\min_\phi \frac{1}{T} \sum_{t = 1}^T \min_{w_t} \frac{1}{N_t} \mathcal{L} \left( w_t^T \phi(x_i^T)  \right)
-$$
-注意上式 $\phi$ 就相当于共享的参数, $w_t$ 就相当于独立的参数, 上式的训练过程就像Meta-Learning的训练过程(两层优化): 现在内层优化 $w_t$, 然后出来优化 $\phi$, 如此迭代循环.
-
-**转化到Meta-Learning**, 就是要适应新的类, 就是之前没有见过的类也要会分类, 则为"省略共享的参数":
-$$
-\min_\phi \frac{1}{T} \sum_{t = 1}^T \frac{1}{N_Q^t} \sum_i^{N_Q^t} \mathcal{L} \left(\phi(x_i^{query}); \phi(x_i^{Support}))  \right)
-$$
 
 
