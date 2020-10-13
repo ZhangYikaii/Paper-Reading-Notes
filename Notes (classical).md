@@ -1,4 +1,4 @@
-# Paper-Reading-Notes
+# Paper-Reading-Notes $(classical)$
 
 [TOC]
 
@@ -78,6 +78,29 @@ $$
 
 
 
+## Basic Method
+
+### Batch Normalization
+
+- [x] **Batch Normalization** (2015) [[paperswithcode](https://paperswithcode.com/paper/batch-normalization-accelerating-deep-network) [code snippet](https://github.com/pytorch/pytorch/blob/1c5c289b6218eb1026dcb5fd9738231401cfccea/torch/nn/modules/batchnorm.py#L210)]
+    - loffe et al. "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift"
+
+
+| 核心在哪? | 精读? 代码? | 关键词? | 亮点? | 笔记时间? |
+| --------- | ----------- | ------- | ----- | --------- |
+|           |             |         |       |           |
+
+---
+
+
+
++ **背景? 提出了什么问题?**
++ **为了解决此问题提出了什么具体的idea?**
++ **如何从该idea形式化地对问题建模、简化并解决的?**
++ **理论方面证明的定理与推导过程?**
++ **这个任务/解决方法有什么意义?**
++ **对论文的讨论/感想?**
+
 
 ## Basic CNN Architectures
 
@@ -92,7 +115,17 @@ $$
 
 ---
 
+用了一些技巧增加数据, 比如flip, jitter, crop, color normalization.
+
+![image-20201011202727460](assets/image-20201011202727460.png)
+
+过了一年的图像分类竞赛, ZFNet在超参数上进行了改进: ![image-20201011203402716](assets/image-20201011203402716.png)
+
+
+
 + **提出了什么问题?**
+
+  **AlexNet为卷积神经网络的开山之作.**
 
   ImageNet 太大, 其目标检测任务是具有 the immense complexity 的.
 
@@ -202,31 +235,94 @@ $$
 
 ### VGG
 
-- [x] **VGG** (2014) [[paperswithcode](https://paperswithcode.com/method/vgg)]
+- [ ] **VGG** (2014) [[paperswithcode](https://paperswithcode.com/method/vgg)]
     + **Simonyan et al. "Very Deep Convolutional Networks for Large-Scale Image Recognition" (2014) [Google DeepMind & Oxford's Visual Geometry Group (VGG)] [[paper](https://arxiv.org/abs/1409.1556)]**
     + *VGG-16*: Zhang et al. "Accelerating Very Deep Convolutional Networks for Classification and Detection" [[paper](https://arxiv.org/abs/1505.06798?context=cs)]
 
 
-| 核心在哪? | 精读? 代码? | 关键词? | 亮点? | 笔记时间? |
-| --------- | ----------- | ------- | ----- | --------- |
-|           |             |         |       |           |
+| 核心在哪?                   | 精读? 代码? | 关键词?                | 亮点? | 笔记时间?  |
+| --------------------------- | ----------- | ---------------------- | ----- | ---------- |
+| 结构和训练手段, 评估方式等. | 精读, 代码  | 深度, 堆叠同大小卷积核 |       | 2020-10-10 |
 
 ---
 
+![image-20201011203607753](assets/image-20201011203607753.png) ![image-20201011210948209](assets/image-20201011210948209.png)
+
+kept three by three(3x3) convs with the **periodic pooling** all the way through the network.
+
+要理解 **两层3x3** 为什么就相当于 **5x5**: 第二层 3x3 是在第一层的基础上的: ![image-20201011205444891](assets/image-20201011205444891.png)
+
+![image-20201011205720083](assets/image-20201011205720083.png)
+
+上图真不错. 一次前向传播需要的计算量.
+
++ **一点总结:**
+
+  **证明了增加网络的深度能够在一定程度上影响网络最终的性能.**
+
+  多次**重复**使用**同一大小的**卷积核来提取更复杂和更具有表达性的特征. 通道数每经过一个下采样或者池化层成倍地增加(从64开始).
+
+  VGG在内存和时间上的计算要求很高.
+
 ![img](assets/vgg_7mT4DML.png)
 
+![image-20201010165119375](assets/image-20201010165119375.png)
+
+以上 第一行`A ... E`是不同的配置. 所有配置都遵循2.1所述的通用设计, 只有深度不同.
+
+> Our main contribution is a thorough evaluation of networks of increasing depth using an architecture with very small (3×3) convolution filters, which shows that a significant improvement on the prior-art configurations can be achieved by pushing the depth to 16–19 weight layers.
+
+>In this paper, we address another important aspect of ConvNet architecture design – its depth.
+
 + **背景? 提出了什么问题?**
+
+  
+
 + **为了解决此问题提出了什么具体的idea?**
+
 + **如何从该idea形式化地对问题建模、简化并解决的?**
+
+  + **结构:**
+
+    图片在一系列卷积核大小为 `3 x 3` (具有较小的感受野, 用来获取上下左右及中心的最小尺寸) 的卷积层中进行传递. `1 x 1` 的卷积核对输入的通道数进行线性变换. stride, padding设置为1. 卷积前后分辨率不变.
+
+    空间池化略, 最大池化层的大小为 `2 x 2`, stride为2. 一系列的卷积层后面跟随的为三个全连接层, 前两个每个通道数为4096, 第三个1000, 代表ILSVRC中的类别数, 最后为多分类的 soft-max. 所有隐藏层都使用ReLU.
+
+  | 固定大小输入 |     卷积     |     卷积      | 非线性 |  maxpooling   |             FC             |
+  | :----------: | :----------: | :-----------: | :----: | :-----------: | :------------------------: |
+  |   224x224    | 3x3(padding) | 1x1(线性变换) |  ReLU  | kernel=2, s=2 | 4096->4096->1000 (softmax) |
+
+  + **训练:**
+
+    在前两个全连接层中增加dropout
+
+  |                  优化器                   | batch | 动量 |    正则化    |           学习率            |
+  | :---------------------------------------: | :---- | :--- | :----------: | :-------------------------: |
+  | mini-batch gradient descent with momentum | 256   | 0.9  | L2 + dropout | $10^{-2}$ (验证集不变时/10) |
+
+  
+
 + **理论方面证明的定理与推导过程?**
+
 + **这个任务/解决方法有什么意义?**
+
+  + **较 AlexNet 的改进:**
+
+    采用连续的3x3小卷积核来代替AlexNet中较大的卷积核.
+
+    > 两个3x3步长为1的卷积核的叠加，其感受野相当与一个5x5的卷积核。但是采用堆积的小卷积核是由于大卷积核的，因为层数的增加，增加了网络的非线性，从而能让网络来学习更复杂的模型，并且小卷积核的参数更少。
+    >
+    > 例如: 假设我们的数据都是有C个通道，那么5x5的卷积核的参数就是5x5xC = 25C个参数，那么两层3x3的卷积层的组合仅有2*(3x3xC) = 18C个参数。
+
+    
+
 + **对论文的讨论/感想?**
 
 
 
 ### GoogLeNet
 
-- [x] **MainTitle** (CVPR 2015) [[paperswithcode](https://paperswithcode.com/method/googlenet)]
+- [ ] **GoogLeNet** (CVPR 2015) [[paperswithcode](https://paperswithcode.com/method/googlenet)]
     - **Szegedy et al. "Going Deeper with Convolutions" [Google]**
     - Original [LeNet page](http://yann.lecun.com/exdb/lenet/) from Yann LeCun's homepage.
     - **Inception v.2 and v.3** (2015) Szegedy et al. "Rethinking the Inception Architecture for Computer Vision" [[paper](https://arxiv.org/abs/1512.00567)]
@@ -240,20 +336,55 @@ $$
 
 ---
 
+![image-20201011211255701](assets/image-20201011211255701.png)
 
+efficient in the amount of compute. **Inception** module.
+
+>The main hallmark of this architecture is the improved utilization of the computing resources inside the network. This was achieved by a carefully crafted design that allows for increasing the depth and width of the network while keeping the computational budget constant.
+
+![image-20201010201554093](assets/image-20201010201554093.png)
+
+![image-20201010201615561](assets/image-20201010201615561.png)
+
++ **一点总结:**
+
+  a 22 layers deep network.
 
 + **背景? 提出了什么问题?**
+
+  GoogLeNet取名源自作者所处单位(Google), 其中L大写是为了向LeNet致敬, 而Inception的名字来源于盗梦空间中的 "we need to go deeper".
+
 + **为了解决此问题提出了什么具体的idea?**
+
+  使用稀疏连接的网络. 某一层激活的神经元只向下一层中特定的几个神经元传递激活信号, 而向其他神经元几乎不传递信息, 即仅有少部分连接是真正有效的, 这也是稀疏的含义.
+
+  然而另一方面, 现代计算架构对稀疏的计算非常低效, 更适合的是密集的计算, 这样便产生了矛盾. 而Inception单元的提出就是为了用密集的结构来近似稀疏结构, 在建模稀疏连接的同时又能利用密集计算的优势.
+
+  
+
+  Inception: 把所有典型的网络层拼在一起, 让模型做选择, 模型自己对卷积核进行投票.
+
 + **如何从该idea形式化地对问题建模、简化并解决的?**
+
+  + Inception Module:
+
+    design a good local network topology. stack these modules on top of each other.
+
+    ![image-20201011211641769](assets/image-20201011211641769.png)
+
+    
+
 + **理论方面证明的定理与推导过程?**
+
 + **这个任务/解决方法有什么意义?**
+
 + **对论文的讨论/感想?**
 
 
 
 ### ResNet
 
-- [x] **ResNet** (CVPR 2016) [[paperswithcode](https://paperswithcode.com/paper/deep-residual-learning-for-image-recognition) ([ResNet Explained](https://paperswithcode.com/method/resnet))]
+- [ ] **ResNet** (CVPR 2016) [[paperswithcode](https://paperswithcode.com/paper/deep-residual-learning-for-image-recognition) ([ResNet Explained](https://paperswithcode.com/method/resnet))]
     - He et al. "Deep Residual Learning for Image Recognition"
 
 
@@ -265,14 +396,149 @@ $$
 
 
 
++ **一点总结:**
+
+  解决深网络退化 degradation problem: 网络层数多/饱和, 加更多层进去会导致优化困难、且训练误差和预测误差更大.
+
 + **背景? 提出了什么问题?**
+
+  相关研究:
+
+  + Residual Representations:
+
+    对于VLAD和Fisher Vector, 残差向量编码比对原始向量编码效率更高.
+
+    在PDE问题中...
+
+  + Shortcut Connections:
+
+    + An early practice of training multi-layer perceptrons(MLPs) is to add a linear layer connected from the network input to the output.
+    + auxiliary classifiers 被用于解决 梯度消失/爆炸情形.
+    + centering layer responses, gradients, and propagated errors, implemented by shortcut connections.
+
+  
+
 + **为了解决此问题提出了什么具体的idea?**
+
+  a deep residual learning framework.
+
+  不是希望每几个堆叠层直接fit所需的underlying mapping, 而是显式地让这些层fit residual mapping.
+
 + **如何从该idea形式化地对问题建模、简化并解决的?**
+
+  ![image-20201010212934359](assets/image-20201010212934359.png)
+
+  the desired underlying mapping $\mathcal{H}(x)$.
+
+  > 假设 ![[公式]](assets/equation.svg) 与 ![[公式]](assets/equation.svg) 维度相同，那么拟合 ![[公式]](assets/equation.svg) 与拟合残差函数 ![[公式]](assets/equation-1602336827067.svg) 等价，令残差函数 ![[公式]](assets/equation.svg) ，则原函数变为 ![[公式]](assets/equation-1602336827068.svg) ，于是直接在原网络的基础上加上一个跨层连接，这里的跨层连接也很简单，就是 将![[公式]](assets/equation.svg) 的**恒等映射（Identity Mapping）**传递过去。
+
+  > We hypothesize that it **is easier to** optimize the residual mapping than to optimize the original, unreferenced mapping. To the extreme, if an identity mapping were optimal, it would **be easier to push the residual to zero** than to fit an identity mapping by a stack of nonlinear layers.
+
+  
+
+  + 两个分支:
+
+    $F(x)$ residential mapping, $x$ identity mapping.
+
+  + **a building block:**
+    $$
+    \mathbf{y}=\mathcal{F}\left(\mathbf{x},\left\{W_{i}\right\}\right)+\mathbf{x}
+    $$
+    其中 $\mathcal{F}\left(\mathbf{x},\left\{W_{i}\right\}\right)$ 是拟合的residential mapping. 上图中 两层, 省略bias 即:
+    $$
+    F=W_{2} \sigma\left(W_{1} x\right)
+    $$
+    如果 $\mathcal{F}$ 和 $x$ 同一维度, 那么直接加, 反之给一个线性映射:
+    $$
+    \mathbf{y}=\mathcal{F}\left(\mathbf{x},\left\{W_{i}\right\}\right)+W_{s} \mathbf{x}
+    $$
+  
++ **网络结构:**
+  
+  + Plain Network:
+  
+    > The convolutional layers mostly have 3x3 filters and follow two simple design rules:
+      >
+      > (i) for the same output feature map size, the layers have the same number of filters;
+      >
+      > (ii) if the feature map size is halved, the number of filters is doubled so as to preserve the time complexity per layer.
+  
+    plain 就是没有residential的.
+  
+  + Residual Network:
+  
+    在plain的基础上加shortcut.
+  
 + **理论方面证明的定理与推导过程?**
+
 + **这个任务/解决方法有什么意义?**
+
 + **对论文的讨论/感想?**
 
 
+
+### DenseNet
+
+- [x] **DenseNet** (CVPR 2017) [[paperswithcode](https://paperswithcode.com/paper/densely-connected-convolutional-networks)]
+    - Huang et al. "Densely Connected Convolutional Networks"
+
+
+| 核心在哪? | 精读? 代码? | 关键词? | 亮点? | 笔记时间? |
+| --------- | ----------- | ------- | ----- | --------- |
+|           |             |         |       |           |
+
+---
+
+connects each layer to every other layer in a feed-forward fashion.
+
+将shortcut-connection的思路发挥到极致. 连接shortcut的方式(不是ResNet的相加)是concatenate. 提升了信息和梯度在网络中的流动, 使网络更容易去训练.
+
+> 在神经网络的前向传递中，每一层都和前面的所有层直接连接，每层的输入来自于之前所有层的输出。一个普通的有L层的神经网络会产生L个层与层之间的连接，而同样是L层的DenseNet则会因为它层与层相互连接的特点，产生多达 $\frac{L(L+1)}{2}$ 个连接。
+
++ **背景? 提出了什么问题?**
+
++ **为了解决此问题提出了什么具体的idea?**
+
++ **如何从该idea形式化地对问题建模、简化并解决的?**
+
+  + **Dense connectivity:**
+
+    ![image-20201011100427502](assets/image-20201011100427502.png)
+
+    Figure 1 illustrates the layout of the resulting DenseNet schematically. Consequently, the $\ell^{t h}$ layer receives the feature-maps of **all preceding layers**, $\mathrm{x}_{0}, \ldots, \mathrm{x}_{\ell-1},$ as input:
+    $$
+    \mathbf{x}_{\ell}=H_{\ell}\left(\left[\mathbf{x}_{0}, \mathbf{x}_{1}, \ldots, \mathbf{x}_{\ell-1}\right]\right)
+    $$
+    
+    where $\left[\mathrm{x}_{0}, \mathrm{x}_{1}, \ldots, \mathrm{x}_{\ell-1}\right]$ refers to **the concatenation of the feature-maps** produced in layers $0, \ldots, \ell-1$.
+    
+  + **Composition function:**
+  
+    $H_{\ell}(\cdot)$ 为三个consecutive操作: batch normalization, ReLU, $3 \times 3$ 卷积.
+  
+  + **Pooling layers:**
+  
+    网络划分为多个密集连接的block, block之间的连接层称为transition layers, 主要进行卷积和池化: ![image-20201011194337543](assets/image-20201011194337543.png)
+  
+    
+  
+  + **Bottleneck layers:**
+  
+    It has been noted in [37, 11] that a **1x1 convolution** can be introduced as bottleneck layer before each 3x3 convolution **to reduce the number of input feature-maps**, and thus to **improve computational efficiency**.
+  
+  
+  
+  + **Model:**
+  
+    ![image-20201011193036858](assets/image-20201011193036858.png)
+  
+    因为不断拼接了之前的层, 所以维度越到后面是不断变大的.
+
+
+
++ **理论方面证明的定理与推导过程?**
++ **这个任务/解决方法有什么意义?**
++ **对论文的讨论/感想?**
 
 ## Meta Learning
 
@@ -621,7 +887,7 @@ Training Set 是 Support Set, Test Set 是 Query Set.
 
 ### MAML
 
-- [x] **MAML** (ICML 2017) [[paper](http://proceedings.mlr.press/v70/finn17a/finn17a.pdf)] [[code (原)](https://github.com/cbfinn/maml) [code(PyTorch)](https://github.com/dragen1860/MAML-Pytorch)]
+- [ ] **MAML** (ICML 2017) [[paper](http://proceedings.mlr.press/v70/finn17a/finn17a.pdf)] [[code (原)](https://github.com/cbfinn/maml) [code(PyTorch)](https://github.com/dragen1860/MAML-Pytorch)]
     - Finn et al. "Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks"
 
 
@@ -722,7 +988,7 @@ Training Set 是 Support Set, Test Set 是 Query Set.
 
 ### MANN
 
-- [x] **MANN** (2016) [[paper](https://arxiv.org/pdf/1605.06065.pdf)] [[code](https://github.com/tristandeleu/ntm-one-shot), [code (tf)](https://github.com/hmishra2250/NTM-One-Shot-TF)]
+- [ ] **MANN** (2016) [[paper](https://arxiv.org/pdf/1605.06065.pdf)] [[code](https://github.com/tristandeleu/ntm-one-shot), [code (tf)](https://github.com/hmishra2250/NTM-One-Shot-TF)]
     - Santoro et al. "One-shot Learning with Memory-Augmented Neural Networks"
 
 
@@ -749,7 +1015,7 @@ Training Set 是 Support Set, Test Set 是 Query Set.
 
 | 核心在哪? | 精读? 代码? | 关键词?                    | 亮点?                    | 笔记时间? |
 | --------- | ----------- | -------------------------- | ------------------------ | --------- |
-| 2. Model  | 精读        | 激活值 -> 分类器权值的预测 | 采样，线性近似，混合策略 |           |
+| 2. Model  | 精读        | 激活值 -> 分类器权值的预测 | 采样，线性近似，混合策略 | 2020-10-3 |
 
 ---
 
@@ -884,6 +1150,8 @@ $\mathcal{D}_{\text {large}}$ 上学到的, 泛化到 $\mathcal{C}_{\text {few}}
 
 
 
+
+
 ### TADAM (难)
 
 - [x] **TADAM** (NIPS 2018) [[paperswithcode](https://paperswithcode.com/paper/tadam-task-dependent-adaptive-metric-for)]
@@ -945,13 +1213,13 @@ $\mathcal{D}_{\text {large}}$ 上学到的, 泛化到 $\mathcal{C}_{\text {few}}
     此时该metric的学习过程, the class-wise cross-entropy loss function:
     $$
     J_{k}(\phi, \alpha)=\sum_{\mathbf{x}_{i} \in \mathcal{Q}_{k}}\left[\alpha d\left(f_{\phi}\left(\mathbf{x}_{i}\right), \mathbf{c}_{k}\right)+\log \sum_{j} \exp \left(-\alpha d\left(f_{\phi}\left(\mathbf{x}_{i}\right), \mathbf{c}_{j}\right)\right)\right]
-$$
+    $$
     其中 $\mathcal{Q}_k$ 是query set, 第 $k$ 类.
     
     对 $\phi$ 求导, (就是内函数外函数导数)有 注意 $\alpha$ 提到外面了:
     $$
     \frac{\partial}{\partial \phi} J_{k}(\phi, \alpha)=\alpha \sum_{\mathbf{x}_{i} \in \mathcal{Q}_{k}}\left[\frac{\partial}{\partial \phi} d\left(f_{\phi}\left(\mathbf{x}_{i}\right), \mathbf{c}_{k}\right)-\frac{\sum_{j} \exp \left(-\alpha d\left(f_{\phi}\left(\mathbf{x}_{i}\right), \mathbf{c}_{j}\right)\right) \frac{\partial}{\partial \phi} d\left(f_{\phi}\left(\mathbf{x}_{i}\right), \mathbf{c}_{j}\right)}{\sum_{j} \exp \left(-\alpha d\left(f_{\phi}\left(\mathbf{x}_{i}\right), \mathbf{c}_{j}\right)\right)}\right]
-$$
+    $$
     
 
     上式:
@@ -1002,11 +1270,7 @@ $$
 
 **3)** 根据上一步的class representation计算similarity metric, 随后乘一个可学习的系数 $\alpha$ 来缩放距离度量, 增强模型的可适性. 最后将这步输出投入到softmax中得到图片的最终分类.
 
-
-
 + **理论方面证明的定理与推导过程?**
   + *Lemma 1*, Appendix A.
 + **这个任务/解决方法有什么意义?**
 + **对论文的讨论/感想?**
-
-
