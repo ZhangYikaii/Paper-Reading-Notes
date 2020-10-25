@@ -1274,3 +1274,366 @@ $\mathcal{D}_{\text {large}}$ 上学到的, 泛化到 $\mathcal{C}_{\text {few}}
   + *Lemma 1*, Appendix A.
 + **这个任务/解决方法有什么意义?**
 + **对论文的讨论/感想?**
+
+
+
+Meta-Learning with Differentiable Convex Optimization
+
+### MetaOptNet
+
+- [x] **MetaOptNet** (CVPR 2019) [[paperswithcode](https://paperswithcode.com/paper/meta-learning-with-differentiable-convex)]
+    - Lee et al. "Meta-Learning with Differentiable Convex Optimization"
+
+
+| 核心在哪? | 精读? 代码? | 关键词? | 亮点? | 笔记时间? |
+| --------- | ----------- | ------- | ----- | --------- |
+|           |             |         |       |           |
+
+---
+
+Our objective is to learn feature embeddings that generalize well under a linear classification rule for novel categories.
+
+![img](assets/algorithm.png)
+
++ **背景? 提出了什么问题?**
+
++ **为了解决此问题提出了什么具体的idea?**
+
+  使用线性分类器, 它能够规划为凸优化问题. 目标是二次规划QP, 这能够使用基于梯度的技巧进行有效解决获得全局最优解. 并且凸问题的解能够通过KKT条件刻画.
+
+  由于后续需要计算任务期望, 基学习器必须是高效的, 并且为了估计嵌入模型 $f_{\phi}$ 的参数, 关于 $\phi$ 的梯度计算也必须是高效的, 这就鼓励选择简单的基学习器如最近类均值nearest-class-mean, 其参数 $\theta$ 是很容易计算的且目标函数是可微的.
+
+  
+
++ **如何从该idea形式化地对问题建模、简化并解决的?**
+
++ **理论方面证明的定理与推导过程?**
+
++ **这个任务/解决方法有什么意义?**
+
++ **对论文的讨论/感想?**
+
+## multi-agent reinforcement learning
+
+> 在单智能体强化学习中，智能体所在的环境是稳定不变的，在多智能体系统中，每个智能体通过与环境进行交互获取奖励值来学习改善自己的策略，从而获得该环境下最优策略的过程被称为多智能体强化学习。
+>
+> 维度爆炸, 目标奖励确定困难, 不稳定性, 探索-利用.
+
+通过**与环境的不断交互**来**学习每个状态的奖励值函数**, 再通过这些奖励值函数来学习得到最优纳什策略. 模型的转移概率以及奖励函数, 因此需要利用到Q-learning中的方法来不断**逼近状态值函数或动作-状态值函数.**
+
+同步学习和演化问题. 收敛到均衡点是多智能体学习的基本要求. 现实难点: 状态 动作空间大, 博弈元素不完全可知.
+
+![image-20201013211608771](assets/image-20201013211608771.png) ![image-20201013211636059](assets/image-20201013211636059.png)
+
+
+
+**纳什均衡 (博弈的解)**
+
+![image-20201013211730835](assets/image-20201013211730835.png)
+
+纳什均衡就是一个所有智能体的联结策略. 在纳什均衡处, 对于所有智能体而言都不能在仅改变自身策略的情况下, 来获得更大的奖励:
+$$
+V_{i}\left(\pi_{1}^{*}, \cdots, \pi_{i}^{*}, \cdots, \pi_{n}^{*}\right) \geq V_{i}\left(\pi_{1}^{*}, \cdots, \pi_{i}, \cdots, \pi_{n}^{*}\right), \forall \pi_{i} \in \Pi_{i}, i=1, \cdots, n
+$$
+还有其他的: ![image-20201013211827169](assets/image-20201013211827169.png)
+
+纳什均衡下的协同博弈问题: ![image-20201013212005565](assets/image-20201013212005565.png)第二个斗车意思是个游戏, 胆小鬼先变道对方不变道的扣分.
+
+**但是**, 这样在第一个"会车"情况下纳什均衡有两个解, 第二个"斗车"例子下有两个解而且有偏好. 所以我们就要修改一些基本设定, 比如 通信规则等.
+
+合作博弈: $r_i$ 收益相等, 竞争博弈收益之和不变:![image-20201013212318438](assets/image-20201013212318438.png)
+
+
+
+![image-20201014093729358](assets/image-20201014093729358.png)![image-20201014100841756](assets/image-20201014100841756.png)
+
+
+
+AI 博弈论方面, 不一定只关注Nash均衡: ![image-20201014101057697](assets/image-20201014101057697.png) ![image-20201014101401998](assets/image-20201014101401998.png)
+
+环境给予Agent一些State信息(可能是部分的), Agent做Action, 环境反馈给Agent一些Reward. Agent需要学习可以得到好Reward的Action.
+
+监督学习 learning from teacher, 强化学习 learning from experience.
+
+game over之后, 这段时期就叫一个episode.
+
++ reward decay: 某些action的reward是未来才能得到的, 长远打算.
++ exploration: 探索Agent没有做过的行为.
+
+Policy-based: learn到一个Actor(做事的), Value-based: learn到一个Critic(判断者).
+
+Action Function $\pi$: input observation.
+
++ Deep Learning: **步骤**
+
+  1. action function.
+
+     ![image-20201018114208680](assets/image-20201018114208680.png)
+
+  2. 判断这个function好不好.
+
+     "类似"监督学习, 参数就是action函数的, 请注意这里的好坏反馈在episode过后, 得到的total reward.
+
+     相同action function(参数一样下), episode过后的reward也是不一样的. 所以希望最大化 $r_{theta}$ (得到的reward)的期望值.
+
+     + 定义 $\tau$ 代表某一个episode内的所有对象 状态 过程.
+
+       但是选定某个Agent之后, 它的action会导致一类相似的 $\tau$.
+
+       over 所有可能的 $\tau$, N场 N 个episode: $\tau^1 \cdots \tau^N$. 得到对 $\theta$ 下期望reward的近似.
+       $$
+       \bar{R}_{\theta}=\sum_{\tau} R(\tau) P(\tau \mid \theta)
+       $$
+
+  3. 选择最好的.
+
+     最后还是用gradient descent.
+     $$
+     \begin{array}{l}
+     \theta^{1} \leftarrow \theta^{0}+\eta \nabla \bar{R}_{\theta^{0}} \\
+     \theta^{2} \leftarrow \theta^{1}+\eta \nabla \bar{R}_{\theta^{1}}
+     \end{array}
+     $$
+     注意这里不需要知道 $R(\tau)$ 的具体形式, 得到是值是环境给的, 不需要知道形式.
+     $$
+     \nabla \bar{R}_{\theta}=\sum_{\tau} R(\tau) \nabla P(\tau \mid \theta)=\sum_{\tau} R(\tau) P(\tau \mid \theta) \frac{\nabla P(\tau \mid \theta)}{P(\tau \mid \theta)} = 
+     $$
+     ![image-20201018190016236](assets/image-20201018190016236.png)
+
+     ![image-20201018190118959](assets/image-20201018190118959.png)
+
+     
+
+### Transformer
+
+sequence to sequence model with attention.
+
++ self-attention: 与RNN一样, sequence到sequence的. 每一个layer可以考虑上层所有输入.
+
+
+
+```python
+# 注意这里的 _config
+@ex.main
+def my_main(_run, _config, _log):
+    # ...
+# 传到下面:
+## run.py 里的这里开始进来:
+## r_REGISTRY 在 runner/episode_runner.py 定义.
+def run_sequential(args, logger):
+    # Init runner so we can get env info
+    runner = r_REGISTRY[args.runner](args=args, logger=logger)
+    # ...
+
+## 接下来进到 runner/episode_runner.py:
+
+```
+
+
+
+
+
+### DQN
+
+- [x] **DQN** (19 Dec 2013) [[paperswithcode](https://paperswithcode.com/paper/playing-atari-with-deep-reinforcement)]
+  - Mnih et al. "Playing Atari with Deep Reinforcement Learning"
+
+
+| 核心在哪? | 精读? 代码? | 关键词? | 亮点? | 笔记时间? |
+| --------- | ----------- | ------- | ----- | --------- |
+|           |             |         |       |           |
+
+---
+
+
+
++ **背景? 提出了什么问题?**
++ **为了解决此问题提出了什么具体的idea?**
++ **如何从该idea形式化地对问题建模、简化并解决的?**
++ **理论方面证明的定理与推导过程?**
++ **这个任务/解决方法有什么意义?**
++ **对论文的讨论/感想?**
+
+
+
+
+
+### QMIX
+
+- [x] **QMIX** (ICML 2018) [[paperswithcode](https://paperswithcode.com/paper/qmix-monotonic-value-function-factorisation)]
+  - Rashid et al. "QMIX: Monotonic Value Function Factorisation for Deep Multi-Agent Reinforcement Learning"
+
+
+| 核心在哪? | 精读? 代码? | 关键词? | 亮点? | 笔记时间? |
+| --------- | ----------- | ------- | ----- | --------- |
+|           |             |         |       |           |
+
+---
+
+探索了一种基于混合价值的多主体强化学习方法, 添加了约束和混合网络结构. 介于COMA和VDN之间.
+
+QMIX使用了一个网络, 该网络**将单个代理值的复杂非线性组合作为联合动作值进行估计**, 而每个代理值仅根据本地观测得到.
+
++ **背景? 提出了什么问题?**
+
++ **为了解决此问题提出了什么具体的idea?**
+
+  QMIX基于这样的观察: 下面贪心的假设可以推广到更大的单调函数族, 这些单调函数族对于满足上式也是充分的, 但不是必需的.
+  $$
+  \underset{\mathbf{u}}{\arg \max } Q_{t o t}=\left(\arg \max u^{1} Q 1 \cdots \arg \max u^{n} Q n\right)
+  $$
+  
+
+  验证一个约束: **Global Action-Value function** and the **Action-Value function of each one of the agents,** in every action, avoiding factorization coming from VDN 之间的单调性.
+  $$
+  \frac{\partial Q_{t o t}}{\partial Q_{a}} \geq 0, \forall a
+  $$
+  允许每个agent通过选择针对其价值功能的贪婪动作来执行.
+
+  只需要确保在$Q_{tot}$上执行的全局argmax与在每个$Q_a$上执行的单个argmax操作集产生相同的结果.
+
++ **如何从该idea形式化地对问题建模、简化并解决的?**
+
+  ![image-20201021114752285](assets/image-20201021114752285.png)
+
+  + **agent 网络**
+
+    represents its value function. 基于全局状态和联合动作的中心动作价值函数$Q_{tot}$.
+
+    + input: observation, action.
+    + return: Q action-value function.
+
+    ```python
+    import torch.nn as nn
+    import torch.nn.functional as F
+    class RNNAgent(nn.Module):
+        def __init__(self, input_shape, args):
+            super(RNNAgent, self).__init__()
+            self.args = args
+            self.fc1 = nn.Linear(input_shape, args.rnn_hidden_dim)
+            self.rnn = nn.GRUCell(args.rnn_hidden_dim, args.rnn_hidden_dim)
+            self.fc2 = nn.Linear(args.rnn_hidden_dim, args.n_actions)
+    def init_hidden(self):
+            # make hidden states on same device as model
+            return self.fc1.weight.new(1, self.args.rnn_hidden_dim).zero_()
+    ```
+
+    
+
+  + **Mixing 网络**:
+
+    + input: $Q_a$ Action-Value functions.
+    + output: the total Action-value function.
+
+    注意如上大于零的约束: the weights are restricted to be non-negative. 网络结构图中红色的部分.
+
+    ```python
+    class QMixer(nn.Module):
+        def __init__(self, args):
+            super(QMixer, self).__init__()
+             self.args = args
+            self.n_agents = args.n_agents        
+    self.state_dim = int(np.prod(args.state_shape))         self.embed_dim = args.mixing_embed_dim
+             self.hyper_w_1 = nn.Linear(self.state_dim, self.embed_dim * self.n_agents)
+            self.hyper_w_final = nn.Linear(self.state_dim, self.embed_dim)
+             # State dependent bias for hidden layer        self.hyper_b_1 = nn.Linear(self.state_dim, self.embed_dim)
+    # V(s) instead of a bias for the last layers
+            self.V = nn.Sequential(nn.Linear(self.state_dim, self.embed_dim),
+                                   nn.ReLU(),                               nn.Linear(self.embed_dim, 1))
+    ```
+
+
+
+
+
++ **理论方面证明的定理与推导过程?**
++ **这个任务/解决方法有什么意义?**
++ **对论文的讨论/感想?**
+
+
+
+
+
+## NLP
+
+### Neural Model
+
+- [x] **Neural Model** (conf) [[paperswithcode](https://paperswithcode.com/method/neural-probabilistic-language-model)]
+    - Author et al. "A Neural Probabilistic Language Model"
+
+
+| 核心在哪? | 精读? 代码? | 关键词? | 亮点? | 笔记时间? |
+| --------- | ----------- | ------- | ----- | --------- |
+|           |             |         |       |           |
+
+---
+
++ train set: 一个词的序列: $w_1, \dots w_T$, $w_t \in T$是vocabulary中的一个词.
++ objective: $f\left(w_{t}, \cdots, w_{t-n+1}\right)=\hat{P}\left(w_{t} | w_{1}^{t-1}\right)$, 其中$w_i^j = (w_i, w_{i + 1}, \cdots, w_{j - 1}, w_j)$. 从这个意义上说, 它给出了high out-of-sample likelihood.
++ `perplexity`: $\frac{1}{\hat{P}\left(w_{t} | w_{1}^{t-1}\right)}$, the average negative log-likelihood的指数.
++ 模型的constraint:
+  + $w_1^{t - 1}$的选择
+  + $\sum_{i \in V} f (i, w_t, \cdots, w_{t - n + 1}) = 1$.
+  + $f > 0$.
++ 通过这些条件概率的乘积, 得到单词序列的联合概率模型.
+
+学习目标概率函数 通过两个步骤:
+
+1. $C \in \mathbb{R}^{|V| \times m}$ 是词向量矩阵. $m$是词向量的维度.
+2. $g$ 将输入序列 对应的词向量$(C(w_{t - n + 1}, \cdots , C(w_{t - 1}))$ 映射成 一个条件概率: $f (i, w_t, \cdots, w_{t - n + 1}) = g(i, (C(w_{t - n + 1}, \cdots , C(w_{t - 1})))$.
+
+$f$ 是两个映射$C, \ g$的合成, $C$被context里面的所有word共享.
+
+$C$的参数就是词向量自己(每个维度的值), 函数$g$可以由前馈或递归神经网络实现(也可以由另一个参数化函数实现), 参数为$w$. 总体参数集为$\theta = (C; \ w)$
+
+![image-20200429101441732](assets/image-20200429101441732.png)
+
+free parameters的数量只与词汇量$V$成线性关系. 它也只与$n$阶成线性比例: 如果引入更多的共享结构, 比如使用延时神经网络或递归神经网络(或两者的组合), 比例因子可以减少到次线性. (???)
+
+![image-20200429101147297](assets/image-20200429101147297.png)
+
+**network structure:**
+
++ two hidden layers:
+
+  + the shared word feature layer $C$ (用$C$矩阵就类似一个word embedding, 也是**降维**), 非线性的.
+  + the ordinary hyperbolic tangent hidden layer, `tanh`.
+
++ **softmax** output layer: 让正概率和为1.
+  $$
+  \hat{P}\left(w_{t} | w_{t-1}, \cdots w_{t-n+1}\right)=\frac{e^{y_{w_{t}}}}{\sum_{i} e^{y_{i}}}
+  $$
+  $y_i$是word i的 没有规范化的log-probabilities.
+
++ $y_i$: (**中间层** 隐含层, 下面的$x$代到这里) 词向量不仅被用作tanh的输入, 还被用作softmax层的输入
+  $$
+  y_i = b + W x + U \tanh (d + Hx)
+  $$
+  其中$x$输入word序列的vector:
+
++ $x$: (**输入层**, 生成词嵌入的表示)
+  $$
+  x = (C(w_{t - 1}, \cdots , C(w_{t - n + 1}))
+  $$
+
++ $h$: 隐含层单元数量.
+
++ $m$: 词向量维度.
+
+**(上面可以从下往上看)**
+
+实际上 上面的 $Hx$还不是最终的矩阵形式, 因为$x$要变成$X$, 而且$x$的维度其实不是$(n - 1)$, 而是$(n - 1) \times m$. 因为它展成词向量的拼接了.
+
+free parameters: (并不是超参数), $C$词向量矩阵也是学习得到的.
+$$
+b, \ d, \ U (\in \mathbb{R}^{|V| \times h}), \ H (\in \mathbb{R}^{h \times (n - 1)}), \ C \in \mathbb{R}^{|V| \times m}
+$$
+超参数大概是: $h, \ n - 1, \ m$. ($n - 1$可以变成$n - 2, n - 3$之类)
+
++ **背景? 提出了什么问题?**
++ **为了解决此问题提出了什么具体的idea?**
++ **如何从该idea形式化地对问题建模、简化并解决的?**
++ **理论方面证明的定理与推导过程?**
++ **这个任务/解决方法有什么意义?**
++ **对论文的讨论/感想?**
+
