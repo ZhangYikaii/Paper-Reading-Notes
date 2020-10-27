@@ -292,6 +292,38 @@ reducing intra-class variation 是重要的: when the feature backbone is shallo
 
 基于外部记忆的. base类和novel类之间是没有相同的. weight generator还把base weight作为输入. 先训练出feature extractor固定, 再训练后面的weight generator.
 
+一般方法的不足/我们期望得到的.
+
++ 基类上的分类能力不能降, 新类上的学习要快, 效果要好.
+
++ ConvNet-based recognition model:
+  $$
+  p = C\left( F \left(x \mid \theta \right) \mid W_{b a s e} \right)
+  $$
+
+  + 令 $z = F \left(x \mid \theta \right)$, 我们有:
+    $$
+    p=\tau \cdot \cos \left(z, \ w\right)=\tau \cdot \bar{z}^{\top} \bar{w}
+    $$
+
++ Few-shot classification weight generator:
+  $$
+  w^{\prime}=G\left(F \left(x^{\prime} \mid \theta \right), W_{b a s e} \mid \phi\right)
+  $$
+
+  + 如下, $\phi$ 都为learnable weight matrix; 分为$w_{a v g}^{\prime}, w_{a t t}^{\prime}, w^{\prime}$三个部分:
+    $$
+    \begin{aligned}
+    w_{a v g}^{\prime}& = \frac{1}{N^{\prime}} \sum_{i=1}^{N^{\prime}} \bar{z}_{i}^{\prime} \\
+    w_{a t t}^{\prime}& = \frac{1}{N^{\prime}} \sum_{i=1}^{N^{\prime}} \sum_{b=1}^{K_{b a s e}} A t t\left(\phi_{q} \bar{z}_{i}^{\prime}, k_{b}\right) \cdot \bar{w}_{b} \\
+    w^{\prime} & =\phi_{a v g} \odot w_{a v g}^{\prime}+\phi_{a t t} \odot w_{a t t}^{\prime}
+    \end{aligned}
+    $$
+
++ 训练阶段 **1** 学习: $C$ 的 $\theta, \ W_{base}$.
+
+  训练阶段 **2** 学习: 采样得fake novel class的$z$, (请注意 $W_{base}$ 蕴含在此), 喂给$G$学习参数 $\phi$, 训练得到的 $w'$ ($G$的输出)作为真正novel class的分类器参数.
+
 注意力在注意啥? 代码中如何拆解为一般形式并理解?
 
 + **背景? 提出了什么问题?**
