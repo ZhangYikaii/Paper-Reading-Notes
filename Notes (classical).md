@@ -1380,12 +1380,12 @@ Bridging this gap between AI and humans is an important direction.
   
 
 + **论文说明, 按编号查找:**
-  + [90]: transformation procedure包含先验知识经验 $E$, 早期 FSL paper 从那些相似类中学习一系列的几何变换, 通过迭代地对齐样本.
-  + [116]: 从类似的类中学习了一组auto-encoders, 每一个都代表一个intra-class.
+  + [90] transformation procedure包含先验知识经验 $E$, 早期 FSL paper 从那些相似类中学习一系列的几何变换, 通过迭代地对齐样本.
+  + [116] 从类似的类中学习了一组auto-encoders, 每一个都代表一个intra-class.
     variability. 向 $x_i$ 中添加学到的变量.
-  + [53]: 假设所有类别对于样本共享一些transformable variability, 学到一个transformation function.
-  + [74]: 使用independent attribute strength regressors去transform $x_i$.
-  + [82]: 在[72]基础上, 使用连续属性子空间为 $x_i$ 添加attribute variations.
+  + [53] 假设所有类别对于样本共享一些transformable variability, 学到一个transformation function.
+  + [74] 使用independent attribute strength regressors去transform $x_i$.
+  + [82] 在[72]基础上, 使用连续属性子空间为 $x_i$ 添加attribute variations.
 
 **接下来3.2那页未看, data方法的.**
 
@@ -1417,11 +1417,11 @@ Bridging this gap between AI and humans is an important direction.
 
     + parameter sharing: 在任务之间共享参数.
 
-      + [160]: 共享前几层的一些信息, 学习不同的最后一层来处理不同的输出.
+      + [160] 共享前几层的一些信息, 学习不同的最后一层来处理不同的输出.
 
-      + [61]: nlp 任务, 先用同一个embedding, 再喂给 task-specific embedding functions and classifiers.
-      + [95]: a variational auto-encoder 从源任务进行预训练, 然后克隆到目标任务. 一些层是shared的, 同时允许两个任务都有一些task-specific的. 目标任务只能更新task-specific的, 而源任务可以同时更新shared和task-specific的层.
-      + [12]: 学习到一个task-specific space, 然后是一个共享的shared variational auto-encoder.
+      + [61] nlp 任务, 先用同一个embedding, 再喂给 task-specific embedding functions and classifiers.
+      + [95] a variational auto-encoder 从源任务进行预训练, 然后克隆到目标任务. 一些层是shared的, 同时允许两个任务都有一些task-specific的. 目标任务只能更新task-specific的, 而源任务可以同时更新shared和task-specific的层.
+      + [12] 学习到一个task-specific space, 然后是一个共享的shared variational auto-encoder.
 
       之后跳过了基于data的方法.
 
@@ -1436,7 +1436,85 @@ Bridging this gap between AI and humans is an important direction.
     + 测试样本也可以被映射到低维空间.
     + 相似度度量可以判断测试样本和训练样本在低维空间中表达的距离.
 
-    [14, 138]: 对测试样本和训练样本的embedding使用了不同的函数.
+    [14, 138] 对测试样本和训练样本的embedding使用了不同的函数.
+
+    ![image-20201031110609744](assets/image-20201031110609744.png)
+
+    + Task-Specific Embedding Model.
+
+      通过只使用来自任务的信息来学习为每个任务定制嵌入函数.
+
+      [130] 使用few-shot 数据集 $D_{train}^c$, 组成样本对, 并进行rank. 使用task-specific的信息学到embedding的函数.
+
+    + Task-Invariant Embedding Model.
+
+      从较大数据集中学到general的embedding function.
+
+      ![image-20201031121426608](assets/image-20201031121426608.png)
+
+      历史脉络:
+
+      + [36] 第一个FSL embedding模型, 使用kernel.
+      + [70, 150] 使用convolutional siamese net[20].
+
+      task-invariant embedding不使用 $D_{train}$ 更新embedding模型参数, 在训练集($N$类)中sample出$U$个类, 最大化模型在剩余 $N - U$ 个类上的性能.
+
+      + [127] 学到了一个线性的embedding.
+
+      通过mete-learning的方法学到的更加复杂:
+
+      + [138] **Matching Nets.**
+
+        [4, 8, 24] Matching Nets 的变体.
+
+        + [4] residual LSTM (resLSTM) 更好的设计关于 训练集和测试集 的embedding函数.
+        + [8] 加入了sample selection step, 将最有益的未标记样本标记出来, 并使用它来增强 $D_{train}$.
+        + [24] 扩展到set-to-set的matching, 有效地对样本的多个部分进行标记.
+
+      + [121] **Prototypical Network.**
+
+        [100, 108, 141] ProtoNet 的变体.
+
+        + [141] 将原型的思想嵌入到Matching Nets中.
+        + [108] semi-supervised变体, 在学习过程中通过 soft-assignment 未标记样本来增强 $D_{train}$.
+
+      + 其他方法:
+
+        + [119] Attentive Recurrent Comparators (ARC), 使用带attention的LSTM来比较测试样例和原型. 将结果作为intermediate embedding.
+        + [84, 115] 使用了GNN, leverage information from local neighborhoods.
+        + [91] SNAIL, embedding network, 有着 interleaved temporal 的卷积层和attention层. 卷积层从过去的时间中汇集信息, 而注意力层则选择性地关注与当前输入相关的特定时间步长. (注意这些都是在某些特定任务下的).
+
+    + Hybrid Embedding Model.
+
+      task-invariant embedding methods 没有leverage关于当前任务的特定的知识. 所以Hybrid的方法就是: 利用 $D_{train}$ 中特定任务信息从先验知识中学习到的task-invariant嵌入模型. 就是下面 $f$ 所做的工作.
+
+      ![image-20201031160258583](assets/image-20201031160258583.png)
+
+      + [14] Learnet, siamese net的改进, 将 $D_{train}$ 中的数据映射到 $f$ 的参数.
+      + [13] 在Learnet的基础上改进成岭回归, 并得到参数的闭式解.
+
+      [100, 162] 将 $D_{train}$ 看作一个整体来输出 $f$ 中的task-specific parameter.
+
+      + [100] TADAM, Task dependent adaptive metric(TADAM) 将类原型平均到task embedding中, 并使用meta-learned函数将其映射到ProtoNet参数.
+      + [162] Dynamic Conditional Convolutional Network (DCCN) 使用固定的一组filter, 使用$D_{train}$学到一组组合系数.
+
++ 4.3 Learning with External Memory
+
+  [49, 89, 124, 145] 从 $D_{train}$ 中获取信息, 之后存储在memory中, $x_{test}$ 是由从外部memory的权重平均表示的, 这有一定的约束, 所以减小了假设空间 $\mathcal{H}$.
+
+  ![image-20201031161710986](assets/image-20201031161710986.png)
+
+  + [89] key-value memory.
+    $$
+    M(i)=\left(M_{\mathrm{key}}(i), M_{\mathrm{value}}(i)\right)
+    $$
+    进来 $x_{test}$ 的时候, 通过相似度函数 $s\left(f\left(x_{\text {test }}\right), M_{\text {key }}(i)\right)$, 找slot, 输出 $\left(M_{\text {value }}(i)^{\prime} s\right)$.
+
+    ![image-20201031162607782](assets/image-20201031162607782.png)
+
+    + Refining Representations:
+
+      
 
 
 
