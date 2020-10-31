@@ -1313,6 +1313,135 @@ Our objective is to learn feature embeddings that generalize well under a linear
 
 + **对论文的讨论/感想?**
 
+
+
+### Survey
+
+Bridging this gap between AI and humans is an important direction.
+
+![image-20201029151705950](assets/image-20201029151705950.png)
+
++ FSL定义:
+
+  其中机器学习的定义为: 对于任务$T$, 从经验$E$中学习, 其中性能度量为$P$. 基于此, FSL经验$E$是有限的. given only a few labeled examples of each class.
+
++ 基本setting:
+
+  Usually, one considers the $N$ -way- $K$ -shot classification [37,138], in which $D_{\text {train }}$ contains $I=K N$ examples from $N$ classes each with $K$ examples.
+
++ 应用场景:
+
+  image classification [138], sentiment classification from short text [157] and object recognition [35], Few-shot regression [37, 156], few-shot reinforcement learning [3, 33].
+
++ 3 typical scenarios:
+
+  + generate samples 并通过图灵测试.
+  + Learning for rare cases.
+  + Reducing data gathering effort and computational cost.
+
+  ![image-20201029163544687](assets/image-20201029163544687.png)
+
+  总是和先验知识(which is "any information the learner has about the unknown function before seeing the examples")结合.
+
+  `REMARK 1`: $E$ 中每类只有一个样本: one-shot learning, 同理zero-shot learning为不包含任何关于supervised information的样本, 但此时要求 $E$ 包含来自其他模式的信息(such as attributes, WordNet, and word embeddings used in rare object recognition tasks).
+
++ 相关的领域:
+
+  Weakly supervised learning(Semi-supervised learning, Active learning); Imbalanced learning; Transfer learning; Meta-learning;
+
+
+
++ the **core issue** of FSL based on error decomposition.
+
+  + Empirical Risk Minimization.
+    $$
+    \mathbb{E}\left[R\left(h_{I}\right)-R(\hat{h})\right]=\underbrace{\mathbb{E}\left[R\left(h^{*}\right)-R(\hat{h})\right]}_{\mathcal{E}_{\mathrm{app}}(\mathcal{H})}+\underbrace{\mathbb{E}\left[R\left(h_{I}\right)-R\left(h^{*}\right)\right]}_{\mathcal{E}_{\mathrm{est}}(\mathcal{H}, I)}
+    $$
+    the empirical risk minimizer $h_I$ 就是在优化: $\mathcal{E}_{\text {est }}(\mathcal{H}, I)$.
+
+    但是在FSL中, $I$ (可利用的数据)很少, 会造成 $h_I$ 过拟合, 所以FSL任务的核心: **the empirical risk minimizer $h_I$ is no longer reliable.**
+
+    如下图: ![image-20201029173209083](assets/image-20201029173209083.png)
+
+    所以FSL任务需要利用先验知识, 现有工作可以分为: ![image-20201029173433077](assets/image-20201029173433077.png)
+
+    + 基于数据: $\tilde{I} \gg I$, 让$h_I$变得更精确.
+    + 基于模型: 使用先验知识约束 $\mathcal{H}$ 的复杂性, 此时$\mathcal{D}_{train}$可以学到好的$h_I$.
+    + 基于算法: 改变 $h^*$ 的搜索策略
+
++ 基于数据增强的方法:
+
+  以图像数据为例: translation [12, 76, 114, 119], flipping [103, 119], shearing [119], scaling [76, 160], reflection [34, 72], cropping [103, 160] and rotation [114, 138].
+
+  依赖领域知识, 而且相应的变换得到的性能提升很大程度和数据集相关.
+
+  ![image-20201029175211179](assets/image-20201029175211179.png) ![image-20201029175350177](assets/image-20201029175350177.png)
+
+  
+
++ **论文说明, 按编号查找:**
+  + [90]: transformation procedure包含先验知识经验 $E$, 早期 FSL paper 从那些相似类中学习一系列的几何变换, 通过迭代地对齐样本.
+  + [116]: 从类似的类中学习了一组auto-encoders, 每一个都代表一个intra-class.
+    variability. 向 $x_i$ 中添加学到的变量.
+  + [53]: 假设所有类别对于样本共享一些transformable variability, 学到一个transformation function.
+  + [74]: 使用independent attribute strength regressors去transform $x_i$.
+  + [82]: 在[72]基础上, 使用连续属性子空间为 $x_i$ 添加attribute variations.
+
+**接下来3.2那页未看, data方法的.**
+
+
+
++ 基于Model的方法:
+
+  希望ground-truth hypothesis $\hat{h}$ 和 $h^*$ 之间的距离越近.
+
+  [92, 94] 可以只选择简单模型线性分类器.
+
+  在FSL问题中, 最好有一个足够大的 $\mathcal{H}$, 这使得标准的机器学习模型变得不可行.
+
+  所以该方法通过 $E$ 中的先验知识约束到一个更小的假设空间 $H \rightarrow \hat{H}$, 经验风险最小化变得可行.
+
+  ![image-20201029214857064](assets/image-20201029214857064.png)
+
+  + **4.1 Multitask Learning**
+
+    多任务学习[23,161]通过利用任务一般信息和任务特定信息来**同时**学习这些任务.
+
+    $T_1, \cdots, T_C$, 有的任务数据量大, 有的少.
+
+    用source task, 则few-shot task是target task.
+
+    $D_{train}^c$ 是training set. 从中学习到每个任务 $T_c$ 对应的 $\theta_c$.
+
+    两种方法: (i) parameter sharing; and (ii) parameter tying:
+
+    + parameter sharing: 在任务之间共享参数.
+
+      + [160]: 共享前几层的一些信息, 学习不同的最后一层来处理不同的输出.
+
+      + [61]: nlp 任务, 先用同一个embedding, 再喂给 task-specific embedding functions and classifiers.
+      + [95]: a variational auto-encoder 从源任务进行预训练, 然后克隆到目标任务. 一些层是shared的, 同时允许两个任务都有一些task-specific的. 目标任务只能更新task-specific的, 而源任务可以同时更新shared和task-specific的层.
+      + [12]: 学习到一个task-specific space, 然后是一个共享的shared variational auto-encoder.
+
+      之后跳过了基于data的方法.
+
+  + **4.2 Embedding Learning**
+
+    embedding到低维空间, 相似样本更接近, 在低维空间即更小的假设空间 $\mathcal{H}$, 这样更少的训练样本也能work;
+
+    这里嵌入到低维空间的函数是从先验知识学到的, 当然也可能用了task-specific的信息.
+
+    Embedding Learning的关键:
+
+    + 测试样本也可以被映射到低维空间.
+    + 相似度度量可以判断测试样本和训练样本在低维空间中表达的距离.
+
+    [14, 138]: 对测试样本和训练样本的embedding使用了不同的函数.
+
+
+
+
+
 ## multi-agent reinforcement learning
 
 > 在单智能体强化学习中，智能体所在的环境是稳定不变的，在多智能体系统中，每个智能体通过与环境进行交互获取奖励值来学习改善自己的策略，从而获得该环境下最优策略的过程被称为多智能体强化学习。
@@ -1636,4 +1765,22 @@ $$
 + **理论方面证明的定理与推导过程?**
 + **这个任务/解决方法有什么意义?**
 + **对论文的讨论/感想?**
+
+
+
+![image-20201031084421757](assets/image-20201031084421757.png)
+
+
+
+
+
+
+
+## `PlotNeuralNet`
+
+```bash
+git clone https://github.com/HarisIqbal88/PlotNeuralNet.git
+# For Windows system, Type in the `git bash` interface:
+
+```
 
