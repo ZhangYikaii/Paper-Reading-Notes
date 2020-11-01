@@ -1514,11 +1514,31 @@ Bridging this gap between AI and humans is an important direction.
 
     + Refining Representations:
 
-      
+      + [114] Memory-Augmented Neural Networks (MANN) 学到 $f$: 将相同类的样本映射到相同的value, 在memory中优化同一个类的表示.
+      + [104] The surprise-based memory module, 仅当不能很好地表达 $x_i$ 的时候才更新memory $M$.
+      + [149] The abstract memory 使用两个memory, 一种方法从包含大规模机器标注数据集的固定memory中提取相关的键值对, 另一种方法精华提取的value, 获得最有用的信息用于分类.
 
+      请注意, few-shot classes是很小的, 所以某种程度来说有较小的机会保存在memory中, 在memory中的few-shot类也很容易被更丰富的类替代,
 
+      [65] 为了缓解上述问题, 提出了lifelong memory.
 
+      [104, 114, 149, 164] 当memory满的时候, 删除the “oldest". 然后memory里的所有age将被置为0.(???)
 
+      对于一个新的样本, 如果返回的 $M_{value} (i)$ 与ground-truth匹配了, 该样本的key会和这个value对应的 $M_{key}(i)$ merge. 所有类占用相同数量的memory slots.
+
+      [125] lifelong memory用来学习word representation.
+
+      lifelong这边没看太懂...
+
+    + Refining Parameters:
+
+      [14] variants 通过 $g(\cdot)$ 从 $D_{train}$ 映射了 $x_{test}$ 的信息.
+
+      [96] Meta Networks (MetaNet) 使用从多个数据集meta-learned的“慢”权重和“快”权重来参数化分类模型, “快”权重是 $D_{train}$ 的特定任务嵌入.
+
+      [97] MetaNet的计算成本可以通过 learning to 修改每个神经元而不是整个参数来降低.
+
+      [22] MN-Net使用一个内存来refine匹配网络中嵌入的学习, 其输出用于参数化一个CNN, 就像Learnet一样.
 
 ## multi-agent reinforcement learning
 
