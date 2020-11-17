@@ -515,4 +515,3 @@ Firstly, Cross Attention Module is introduced to deal with the problem **of unse
 
   the episode training mechanism: The episodes used in training **simulate the settings in test**. the settings in test. Each episode is formed by **randomly sampling $C$ classes and $K$ labeled samples per class** as the support set $\mathcal{S}=\left\{\left(x_{a}^{s}, y_{a}^{s}\right)\right\}_{a=1}^{n_{s}}\left(n_{s}=C \times K\right),$ and a fraction of the rest samples from the $C$ classes as the query set $\mathcal{Q}=\left\{\left(x_{b}^{q}, y_{b}^{q}\right)\right\}_{b=1}^{n_{q}} .$ And we denote $\mathcal{S}^{k}$ as the support subset of the $k^{t h}$ class. **How to represent each support class $\mathcal{S}^{k}$ and query sample $x_{b}^{q}$ and measure the similarity between them** is a key issue for few-shot classification.
 
-  

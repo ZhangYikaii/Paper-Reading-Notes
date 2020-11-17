@@ -1,3 +1,5 @@
+
+
 # Paper-Reading-Notes $(classical)$
 
 [TOC]
@@ -1425,6 +1427,10 @@ Bridging this gap between AI and humans is an important direction.
 
       之后跳过了基于data的方法.
 
+      
+
+      
+
   + **4.2 Embedding Learning**
 
     embedding到低维空间, 相似样本更接近, 在低维空间即更小的假设空间 $\mathcal{H}$, 这样更少的训练样本也能work;
@@ -1539,6 +1545,68 @@ Bridging this gap between AI and humans is an important direction.
       [97] MetaNet的计算成本可以通过 learning to 修改每个神经元而不是整个参数来降低.
 
       [22] MN-Net使用一个内存来refine匹配网络中嵌入的学习, 其输出用于参数化一个CNN, 就像Learnet一样.
+
+### Self-paced Adversarial Training for Multimodal Few-shot Learning
+
+又叫 "Multi-modal Few-shot Learning: A benchmark"
+
+![image-20201109201203989](assets/image-20201109201203989.png)
+
+训练在 图像, 文本 上, 测试在 图像 上. 引入了一个文本条件的GAN, 和 self-paced 策略的采样方法.
+
+$C_{base}, C_{novel}$, training sample: $(I_j, T_j)$ (图片, 文本). 多模训练 单模测试 (模态). text-conditional GAN 学到 文本->图片 的映射. 这补偿了 $C_{novel}$ 的不足. GAN产生了由文本生成的图片后, 使用Self-paced的采样方法: 需要是class discriminative的.
+
+文本数据来自: "Learning deep representations of fine-grained visual descriptions."
+
+
+
+### Toward Multimodal Model-Agnostic Meta-Learning
+
+![image-20201109204643695](assets/image-20201109204643695.png)
+
+
+
+### Few-Shot Image and Sentence Matching via Gated Visual-Semantic Embedding
+
+![image-20201110113538432](assets/image-20201110113538432.png)
+
++ 三个部分: uncommon VSE 提取不常见的东西(在图像和文本中). 对语义建模得到关联的全局表示. common VSE 学有区别的表示. gated metric fusion 综合上述两个.
+
++ uncommon VSE部分使用了预训练好的Faster RCNN.
+
++ Semantic Relation Modeling for Association:
+
+  上面得到特征之后, 需要全局图像/文本关联的表示. 使用Skip-Gram提取顺序.
+
+
+
++ 期刊:
+
+  Self-paced Adversarial Training for Multimodal Few-shot Learning
+
+  Toward Multimodal Model-Agnostic Meta-Learning
+
+  Cross-modal Hallucination for Few-shot Fine-grained Recognition
+
+  SL-DML: Signal Level Deep Metric Learning for Multimodal One-Shot Action Recognition (未发)
+
+  
+
+  
+
++ Multimodal Model-Agnostic Meta-Learning via Task-Aware Modulation (NIPS 2019)
+
++ Few-Shot Image and Sentence Matching via Gated Visual-Semantic Embedding (AAAI 2019)
+
++ Unsupervised vs. Transfer Learning for Multimodal One-Shot Matching of Speech and Images (INTERSPEECH 2020)
+
++ Few-Shot Unsupervised Image-to-Image Translation (ICCV 2019)
+
++ 
+
+将不同模态数据嵌入到一个公共表示空间中，以便进行对齐、比较和融合。借助深度学习技术已经能够轻松寻找良好的嵌入空间，但是目前大多数深度学习方法依赖于大量有标注的数据，要想获得更好的性能，就必须拥有更多的有标注数据，这成为了一个主要瓶颈。对于多模态学习更是如此，因为它需要同步标注对齐的多模态数据，例如图像和语音对齐。提供大量有标记多模态数据一直是解决多模态学习问题（如理解、转换和生成）的一个重大挑战，是否应该对多模态模型进行联合预训练？亦或是应该先对各个模态分别进行预训练，然后再找到融合的方法？
+
+
 
 ## multi-agent reinforcement learning
 
@@ -1783,6 +1851,12 @@ QMIX使用了一个网络, 该网络**将单个代理值的复杂非线性组合
 
 ## NLP
 
+### Latent Semantic Index (LSI)
+
+希望做降维处理:
+
+$X^T X$ 词相似度矩阵. 对 $X$ 做奇异值分解, 这个就相当于PCA, $X^TX$就像协方差矩阵.
+
 ### Neural Model
 
 - [x] **Neural Model** (conf) [[paperswithcode](https://paperswithcode.com/method/neural-probabilistic-language-model)]
@@ -1867,18 +1941,162 @@ $$
 
 
 ![image-20201031084421757](assets/image-20201031084421757.png)
+$$
+\begin{aligned}
+\log p(\mathbf{\Xi} ; \ \mu_{T_i}) &=\sum_{i=1}^{n}\log \left( \mu_{T_i}^{\xi_{i}}(1-\mu_{T_i})^{1-\xi_{i}} \right)  \\
+&=\sum_{i=1}^{n}\left[\xi_{i} \log \mu_{T_i}+\left(1-\xi_{i}\right) \log (1-\mu_{T_i})\right]
+\end{aligned}
+$$
 
 
 
+## 应随
+
+齐次(时间), 和平稳过程还不一样.
+
++ Lebesgue 控制收敛定理, 描述积分/求和外面的极限可以放进去, 条件为找一个每一项的bound, 这个上界的积分/求和是有限的即可.
++ Fatou 引理: 数列 $\lim$ 放到 $\sum$ 里面后变小. 条件是每一项大于零.
+
+不可约用可达定义.
+
+对于每一个状态, 都有定义的一个周期: $d(i)$.
+
++ $f_{ij}^{(m)}$: 从 $i$ 出发, $m$ 步后首次到 $j$ 的概率.
++ $f_{ij}^*$: $i \rightarrow j$ 有限步转移. $i$ 常返: $f_{ii}^* = 1$.
++ $m_{ij}$: 平均回访时间. $\sum n f_{ij}^{(n)}$, $< \infty$ 则**正常返**.
++ 周期性: 关于 $p_{ii}^{(n)}$ 定义.
+
+常返判别: 两条. 遍历: 非周期的正常返.
+
++ 正常返就可以推平稳分布 $\pi_j = m_{jj}$ 了. 两个断言.
+
+蓝书1.6分解, $p_{ij}, f_{ij}^{(m)}$ 之间的关系, 并且还有 $p^{(m)}_{ij} \geq f_{ij}^{(m)}$, 因为 $f$ 的条件更强需要中间不能经过$j$了.
+
++ 书:
+
+  recurrent 定义 1.2.1
+
+  第一次访问时间 $T_j (\omega)$
+
+  不可约 联系常返, 有 <=> $f^*_{ii} = 1$
+
+  非常返 => $\lim p_{ij}^{(n)} = 0$
+
+  $p_{ij}, f_{ij}^{(m)}$ 之间的关系, $p_{ij}$ 求和/不求和 联想下列分解, 注意第一个式子呀(其实是第三个式子推出来的)!
+  $$
+  \sum_n p_{ij}^{(n)} = f^*_{ij} \sum_n p_{jj}^{(n)} \\
+  \sum_{n=1}^{\infty} p_{i i}^{(n)}=\frac{f_{i i}^{*}}{1-f_{i i}^{*}} \\
+  p_{ij}^{(n)} = \sum_m f_{ij}^{(m)} p_{jj}^{(n - m)} \\
+\lim_{n \rightarrow \infty}\sum_{m=1}^{n} p_{i j}^{(m)} = \frac{f_{ij}^*}{m_{jj}}
+  $$
+$i$ 常返, 仅可能 $f_{ij}^* = 0/1$, 这取决于 $i$ 是否可达 $j$
+  
+  $\mathbb{P} \{ \cdot \mid \cdot \}$ 要拆成联合分布 除 的形式证明.
+  
+  正常返定义 1.2.14
+  
+
+互通类内有两个状态非常返, 类内所有状态都非常返.
+$$
+n! \sim n^{n + \frac{1}{2}} e^{-n} \sqrt{2 \pi}
+$$
+求平稳分布的, harmonic equation, 并且记住 $q + p = 1$, 解差分方程.
+
+Examples 在第几页: (35), 44, 57, 60, 65.
+
+周期, $p_{ii}^{(n)} > 0$, 对所有 $n$ 的最大公约数.
+
++ 例子总结:
+  
+  + 随机游走: $p_{00}^{(2n)}$, 记住Stirling公式.
+  
+    + Tom and Jerry: 联想计算 $f_{00}^{(n)}$, 注意与上述不同, 这里是 $f$ 了; 配出两个连乘相减(全部$p_i$表示). 正常返 因为 $m_{00} < \infty$.
+  
+    + 双侧吸收壁/单侧吸收壁: 解差分方程, 注意端点条件 $u_0 = 1, u_n = 0$, 代入解$c_1, c_2$.
+  
+    + 反弹壁:
+  
+      0/1 完全反弹壁: $p < \frac{1}{2}$ 正常返, $p = \frac{1}{2}$ 零常返.
+    
+      判断常返: 平稳分布每一项写成第一项的表达. 平稳分布所有项和为 1 => 写出第一项的表达. 第一项(平稳分布的每一项)不要为0(常返) => $p \leq \frac{1}{2}$. (这里常返直接用 $m_{ii} < \infty$ 推的).
+    
+      也可以和和吸收壁的一样解 平稳分布. 同样保持上述端点条件去解. (这里常返用
+    
+      + 66页, 不是0/1的反弹壁:
+    
+        同样, $p < \frac{1}{2}$ 正常返, $p = \frac{1}{2}$ 零常返.
+    
+        平稳分布所有项和为1, 写出所有用 $x_0$ 的表达, 平稳分布每一项 $= \frac{1}{m_{ii}}$, 用1.3.8 $m_{ii}$ 别趋近于 $\infty$
+    
+    + 67页, 上三角上面多加一行的:
+    
+      用函数交点判断有没有解, 函数参数是平稳分布的概率.
+    
+    + 68页, 单纯上三角转移矩阵, 用harmonic方程有非常值, 大于0, 有界的解来判断非常返.
+  
++ 常返判定:
+  $$
+  \sum_n p_{ii}^n = \infty \\
+  \mathbb{P} \{ \exist \ n_k \rightarrow \infty, \ s.t. X_{n_k} = i \mid X_0 = i \} > 0 \\
+  f_{ii}^* = 1
+  $$
+
+  + 或 if $f_{ij}^* = 1, \ \forall i \neq j$, 则 $j$ 常返. (cf. p.69)
+
+  + **或** (类似下面非常返的):
+    $$
+    \sum_j p_{ij} y_j \leq y_i
+    $$
+    
+
++ 非常返:
+  $$
+  \Rightarrow \lim_n p_{ij}^{(n)} = 0
+  $$
+  请注意上式的证明依赖于 $\sum_n p_{ij}^{(n)}$ 的值趋于0/有限, 分 $i \neq j$ 讨论即可.
+
+  + 或 harmonic equation 有 有界, 非负, 非常值 解.
+
+  请注意还有一些常返的反面也是成立的, 比如 $f_{ii}^* = 0, \sum_n p_{ii}^n < \infty$, 
+
+  
+
++ 正常返, $X$ 不可约:
+
+  + 常返并且存在 $i$:
+    $$
+    m_{i i}=\sum_{n \geq 1} n f_{i i}^{(n)}<\infty
+    $$
+
+  + 存在平稳分布, 并且是:
+    $$
+    \pi_{j}=\frac{1}{m_{j j}}, \ \forall j \in S
+    $$
+
+有限状态马氏链的常返态一定是正常返.
 
 
 
+### ODE
 
-## `PlotNeuralNet`
++ 方程解的存在唯一性定理.
 
-```bash
-git clone https://github.com/HarisIqbal88/PlotNeuralNet.git
-# For Windows system, Type in the `git bash` interface:
++ 切线问题, 处处吻合的证明.
 
-```
+  + 微积分那些的微分方程解法. 常数变易法之类的.
 
++ [Grönwall 不等式](https://en.wikipedia.org/wiki/Gr%C3%B6nwall%27s_inequality) 用其证明解的唯一性.
+
++ 非齐次ODE解 = $C \cdot$齐次ODE解 + 非齐次ODE特解.
+
++ P-L定理, 在学长笔记59页.
+
+  Picard 迭代就是初值问题里的 $y' = f(x, y(x))$ 右边的 $f(x, y(x))$ 放到迭代序列里面. 一层一层, 套出来的在代入下一次.
+
++ 压缩映像原理: 条件 完备度量空间, 闭集, 压缩映射 $\Rightarrow$ $\exist ! x$ 不动点.
+
++ $e^A$:
+
+  + 如何定义 $e^A$
+  + $e^{At}$
+  + 怎么求 $e^A$
