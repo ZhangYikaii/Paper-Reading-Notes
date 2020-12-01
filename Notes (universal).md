@@ -4,6 +4,18 @@
 
 
 
+三个维度: 数据集, x-way y-shot, 网络/方法.
+
+## `miniimagenet`:
+
+| Method ↓ / Setups → | 5-Way 5-Shot                                              | 5-Way 1-Shot |
+| ------------------- | --------------------------------------------------------- | ------------ |
+| Proto               | 61.8 (`miniImageNet_nt=5_kt=20_qt=15_nv=5_kv=5_qv=1.csv`) |              |
+| Matching            |                                                           |              |
+|                     |                                                           |              |
+
+
+
 ```markdown
 ### MainTitle
 
@@ -514,4 +526,148 @@ Firstly, Cross Attention Module is introduced to deal with the problem **of unse
 + **对论文的讨论/感想?**
 
   the episode training mechanism: The episodes used in training **simulate the settings in test**. the settings in test. Each episode is formed by **randomly sampling $C$ classes and $K$ labeled samples per class** as the support set $\mathcal{S}=\left\{\left(x_{a}^{s}, y_{a}^{s}\right)\right\}_{a=1}^{n_{s}}\left(n_{s}=C \times K\right),$ and a fraction of the rest samples from the $C$ classes as the query set $\mathcal{Q}=\left\{\left(x_{b}^{q}, y_{b}^{q}\right)\right\}_{b=1}^{n_{q}} .$ And we denote $\mathcal{S}^{k}$ as the support subset of the $k^{t h}$ class. **How to represent each support class $\mathcal{S}^{k}$ and query sample $x_{b}^{q}$ and measure the similarity between them** is a key issue for few-shot classification.
+
+
+
+### Graph Similarity
+
++ GNN: 同时感知图结构和feature.
+
+  aggregate: 用邻居的feature更新下一层的hidden state. 采用卷积(1. Spatial-based, 2. Spectral-based)
+
+  readout: 所有nodes的feature集合起来代表这个图.
+
+  第 $l$ 层图卷积写成这样的非线性函数: $H^{l+1}=f\left(H^{l}, A\right)$, $H$ 是上一层输出, $H^0$ 是节点的特征矩阵.
+
+  离散卷积本质就是一种加权求和, CNN中的卷积本质上就是利用一个共享参数的kernel, 通过计算中心像素点以及相邻像素点的加权和来构成feature map实现空间特征的提取. 加权参数(kernel的)是学习得到的.
+
+  Spectral graph theory(有wiki): 借助于图的拉普拉斯矩阵的特征值和特征向量 来研究图的性质.
+
+  定义Laplacian算子的目的是为了找到Fourier变换的基. 图上=>拉普拉斯矩阵. 随即定义图上Fourier变换.
+  
++ 图 相似度:
+
+  kernel method:
+
+  1 Graph embedding 算法, 将图(Graph)结构嵌入到向量空间, 得到图结构的向量化表示, 直接应用基于向量的核函数(RBF kernel, Sigmoid kernel, etc.) 处理, 但是这样降维损失了大量结构化信息; 
+
+  2 Graph kernel, 直接面向图结构数据, 核函数计算高效的优点, 又包含了图数据在希尔伯特高维空间的结构化信息.
+
++ Contrastive Methods只需要在特征空间上学习到区分性. 不会过分关注像素细节, 而能够关注抽象的语义信息. 一般范式: 学到与相似样本的相似度得分更高, 不相似样本的得分低. 表示学习算法并不一定要关注到样本的每一个细节, 只要学到的特征能够使其和其他样本区别开来就行.
+
+  motivation: 深度学习是1 Representation Learning, 2 Inductive Bias Learning, 在一些不涉及逻辑、推理的问题上表现较好. InfoNCE.
+
+  自监督: 任意挖掘对象之间联系、探索不同对象共同本质的方法.
+
+- [x] (NIPS 2020) [[paperswithcode]()]
+    - Author et al. "A Graph Similarity for Deep Learning"
+
+
+| 核心在哪? | 精读? 代码? | 关键词? | 亮点? | 笔记时间? |
+| --------- | ----------- | ------- | ----- | --------- |
+|           |             |         |       |           |
+
+---
+
+GNN 聚合-transform, 聚合邻居的属性然后通过可学习的函数transform. 我们缺乏对这些representation有多相似的.
+
+采用kernel距离, 提出 transform-sum-cat, 在邻域聚合中, 通过聚合-transform来反映节点邻域之间的连续相似性. 进而引出Weisfeiler–Leman similarity (WLS), 与现有的图kernel相比, WLS很容易用普通的深度学习框架实现. 
+在图分类实验中, transform-sum-cat方法的性能明显优于目前流行的GNN模型中的其他邻域聚集方法.
+
++ **背景? 提出了什么问题?**
+
+  从前图的相似性度量: Weisfeiler–Leman (WL) algorithm. 该算法核心是做 neighborhood aggregation.
+
+  问题提出: 连续属性在邻域聚合时发送问题. 提出 transform-sum-cat, 其中cat表示与来自中心节点的信息的连接, 并应用到WL算法上.
+
+  ![image-20201127113628054](assets/image-20201127113628054.png)
+
+  + WL算法 同构测试, 在有限步后比较: ![image-20201127114555019](assets/image-20201127114555019.png)
+
+  + the kernel distance between the point sets:
+    
+    $K$ 是一个正定核, 相当于有个映射 $\phi$ 到希尔伯特空间.
+  
+  
+
+  先aggregate, 再transform, 这个顺序没有可靠理论证明. 先aggregate在一些例子中可能带来危险: 不同的图但是 一样.
+
++ **为了解决此问题提出了什么具体的idea?**
+
+  一个好的neighborhood representation:
+
+  1 旋转不变, 2 平移不变, 3 单调性.
+
++ **如何从该idea形式化地对问题建模、简化并解决的?**
+
+  Weisfeiler–Leman similarity: **reflect** the similarity **between the sets of neighbors’ attributes** into the **node-wise updated** attributes via the set-representation vector from Section 2.3.
+  
+  ![image-20201128105013323](assets/image-20201128105013323.png)
+  
+  单个迭代步骤对应于 transform-sum-cat.
+  
+  注意是先计算希尔伯特矩阵, 就是每两个图之间的距离 $\mathcal{K} (G_1, G_2)$, 搞好之后喂到svm里面, 直接一个度量的矩阵, 可以不需要知道 $\phi (G_1)$.
+
+
++ **理论方面证明的定理与推导过程?**
++ **这个任务/解决方法有什么意义?**
++ **对论文的讨论/感想?**
+
+
+
+## Contrastive Learning
+
++ 图上的, (关于 Self-supervised Learning: Generative or Contrastive):
+
+  三类: Generative、Contrastive、Adversarial(Generative-Contrastive)
+
+  
+  
+  
+
+
+
++ 不同领域/任务之间 有共享的学习器, 有刻画任务不同的学习器.
+
+  共享了一部分参数, 假设空间 $\mathcal{H}$ 的大小会更小.
+
+  理论层面 $\mathcal{O} (\frac{1}{\sqrt{NT}} )$, $N$ 是任务的数目. 多模态是多任务的一个特例. few-shot 即在$N$很大时是可行的.
+
+  多任务的应用是广的, 比如多loss训练.
+
++ 多任务的setting(看陆学长图): 学到每个任务/数据集对应的分类器, 每个数据集有一个对应的测试集进行测试.
+
+  meta learning: 将原有任务数据集上扩展到新的任务上. 期望跨任务拓展.
+
+  所有任务都是从共同的分布中抽取的.
+
++ few-shot NFL 不可能直接在样本很小上学习出. 从已有的知识/数据/类别上构造.
+
+  eg: 目标做 2-way, 1-shot, **则这样构造训练集**:
+
+  抽样, 例如凑出了A, B两个类别, 又抽出了 $a_1, b_1$ 两个样本, 这就是一个任务.
+
+  同理又抽出一个任务 $b_2, d_2$. 如此可以构造非常多的任务. 通过这样一个过程去测试新的少样本任务. 同样测试集就是抽完类别之后抽一个和测试集不重叠的.
+
+  注意上面都是拿去训练的, 都是带标签的, 上面抽的就是support和query.
+
+  多任务评估:
+  $$
+  \min \frac{1}{T} \sum_t \min_n \frac{1}{N} \sum_i \mathscr{L} ( h \cdot g (x_i), y)
+  $$
+  few-shot评估见手机拍照. 很像但是有点不同, query set中的元素依赖support中得到的预测和query set的标签算loss.
+
+  已有数据的模拟, 达到对未知数据的预测能力.
+
+  因为这样在原样本/训练样本上query是算loss的, 所以我们任务泛化到少样本是可以解释的.
+
+  如何做好内层优化: 1 最近邻, query 和 support 之间的.
+
+  最近邻方法和similarity相关, 一般有 1 cosine (Matching Network), 2 计算出每个类的中心, 和类别中心算相似度.
+
+  MAML 固定步数的梯度下降来逼近这个点. 小样本学习是一个问题, 这个问题也可以用其他方法解比如迁移学习等. 元学习就是一类方法.
+
+  期望新任务上的模型与理想模型非常近似, 但是在模型空间上比较模型的近似是很难的(模型参数多, 且理想模型不好训练), 所以转而在样本空间上比较, 即 $f (D_{tr})$ 这个模型对 $x$ 的预测是非常准的, 即非常像理想模型了.
+
+  构造训练集非常关键, 这和long-tail或主动学习等都有很大关系. 元学习: 通过目标模型调整抽样方式. 元学习形而上学, 样本空间往上走一层.
 
